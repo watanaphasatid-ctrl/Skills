@@ -272,6 +272,19 @@ describe('degraded instrumentation and I/O', () => {
   });
 });
 
+describe('safety latches survive an I/O read failure', () => {
+  it('a latched IL-02 keeps the outlet valve closed even when read() fails but write() still works', () => {
+    cs.setOutletValveCommand(80);
+    io.inputs.levelSwitchLL = true;
+    io.inputs.levelPct = 4;
+    cs.scan(0.1);
+    expect(io.outputs?.outletValvePct).toBe(0);
+    io.failRead = true;
+    cs.scan(0.1);
+    expect(io.outputs?.outletValvePct).toBe(0);
+  });
+});
+
 describe('alarms', () => {
   it('raises level high and high-high alarms after the on-delay and lets the operator acknowledge', () => {
     io.inputs.levelPct = 85;

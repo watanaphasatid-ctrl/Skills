@@ -51,7 +51,7 @@ export function TrendChart({ series, visible, windowS, frozenEnd = null, yMin, y
       const h = box.clientHeight;
       if (w < 20 || h < 20) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const key = `${w}x${h}@${dpr}|${endT.toFixed(2)}|${history.length}|${p.windowS}|${cursor.current}|${JSON.stringify(p.visible)}|${p.series.length}`;
+      const key = `${w}x${h}@${dpr}|${endT.toFixed(2)}|${history.length}|${p.windowS}|${cursor.current}|${JSON.stringify(p.visible)}|${p.series.length}|${p.yMin}|${p.yMax}|${JSON.stringify(p.refLines)}`;
       if (!force && key === lastKey) return;
       lastKey = key;
       if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {

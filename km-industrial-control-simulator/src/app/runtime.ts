@@ -94,7 +94,14 @@ export class Runtime {
       }
       if (r.steps > 0) this.dirty = true;
     }
-    for (const f of this.frameListeners) f(realDt);
+    for (const f of this.frameListeners) {
+      try {
+        f(realDt);
+      } catch (e) {
+        // A failing renderer/chart must not stop snapshot publishing for the rest of the UI.
+        console.error('frame listener failed', e);
+      }
+    }
     if (this.dirty && ts - this.lastPublish >= PUBLISH_INTERVAL_MS) this.publish();
   };
 

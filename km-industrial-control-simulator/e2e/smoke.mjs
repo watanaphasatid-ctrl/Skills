@@ -156,6 +156,15 @@ try {
     assert((await page.inputValue('#ctl-sp-num')) === '65.0', 'field did not snap back to the live value');
   });
 
+  await check('E05b Escape cancels an edit instead of committing it', async () => {
+    const before = (await snap(page)).sp;
+    await page.fill('#ctl-sp-num', '42');
+    await page.press('#ctl-sp-num', 'Escape');
+    await page.waitForTimeout(150);
+    assert((await snap(page)).sp === before, 'Escape committed the typed value');
+    assert((await page.inputValue('#ctl-sp-num')) === before.toFixed(1), 'field did not revert');
+  });
+
   await check('E06 Auto mode drives the process to the setpoint (real-time UI readout)', async () => {
     await page.click('.segmented[aria-label="Controller mode"] >> text=Auto');
     assert((await snap(page)).mode === 'auto', 'mode not auto');

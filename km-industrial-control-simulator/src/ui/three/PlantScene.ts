@@ -216,6 +216,7 @@ export class PlantScene {
     el.addEventListener('pointerdown', this.onDown);
     el.addEventListener('pointermove', this.onMove);
     el.addEventListener('pointerup', this.onUp);
+    el.addEventListener('pointercancel', this.onCancel);
     el.addEventListener('pointerleave', this.onLeave);
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
@@ -343,16 +344,21 @@ export class PlantScene {
     el.removeEventListener('pointerdown', this.onDown);
     el.removeEventListener('pointermove', this.onMove);
     el.removeEventListener('pointerup', this.onUp);
+    el.removeEventListener('pointercancel', this.onCancel);
     el.removeEventListener('pointerleave', this.onLeave);
     this.controls.dispose();
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       m.geometry?.dispose();
-      const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-      if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
-      else mat?.dispose();
+      const mats = Array.isArray(m.material) ? m.material : m.material ? [m.material] : [];
+      for (const mat of mats) {
+        (mat as THREE.MeshBasicMaterial).map?.dispose(); // contact-shadow CanvasTextures
+        mat.dispose();
+      }
+      if ((o as THREE.InstancedMesh).isInstancedMesh) (o as THREE.InstancedMesh).dispose();
     });
     this.renderer.dispose();
+    this.renderer.forceContextLoss(); // release the GL context so remounts cannot exhaust the browser limit
     el.remove();
     for (const l of this.labels) l.el.remove();
   }
@@ -769,6 +775,13 @@ export class PlantScene {
     if (id === 'estop') this.cb.onEStopToggle();
     if (id === 'sp') return;
     this.cb.onSelect((id as EquipmentId | null) ?? null);
+  };
+
+  /** A cancelled gesture (e.g. touch interrupted by the OS) must never leave orbit disabled. */
+  private readonly onCancel = (): void => {
+    this.dragging = false;
+    this.downAt = null;
+    this.controls.enabled = true;
   };
 
   private readonly onLeave = (): void => {

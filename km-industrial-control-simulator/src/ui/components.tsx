@@ -100,8 +100,14 @@ export function NumberSlider({ id, label, value, min, max, sliderMax, step, unit
     editing.current = true;
     setText(e.currentTarget.value);
   };
+  const cancelled = useRef(false);
   const finish = () => {
     editing.current = false;
+    if (cancelled.current) {
+      cancelled.current = false;
+      setText(value.toFixed(digits));
+      return;
+    }
     const n = Number(text);
     // Out-of-range typing is REJECTED, not clamped: a typo such as 650 for 65 must not become 100.
     if (text.trim() !== '' && Number.isFinite(n) && n >= min && n <= max) commit(n);
@@ -125,8 +131,7 @@ export function NumberSlider({ id, label, value, min, max, sliderMax, step, unit
             onKeyDown={(e) => {
               if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur();
               if (e.key === 'Escape') {
-                editing.current = false;
-                setText(value.toFixed(digits));
+                cancelled.current = true; // blur() below runs finish(); it must discard, not commit
                 (e.currentTarget as HTMLInputElement).blur();
               }
             }}

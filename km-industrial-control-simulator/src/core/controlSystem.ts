@@ -382,7 +382,8 @@ export class ControlSystem {
     this.demand = 0;
     this.pumpCommand = 0;
     try {
-      this.io.write({ pumpSpeedPct: 0, inletValvePct: 0, outletValvePct: this.opOutlet });
+      // A latched IL-02 must keep the outlet closed even while inputs are unavailable.
+      this.io.write({ pumpSpeedPct: 0, inletValvePct: 0, outletValvePct: this.safety.interlock('IL-02').tripped ? 0 : this.opOutlet });
     } catch {
       // Nothing more can be done in software if the output path is also down.
     }
