@@ -1,0 +1,17 @@
+# Python packages used by the project-level skills in .claude/skills/
+# pip install -r requirements-skills.txt
+anthropic        # mcp-builder (evaluation harness)
+mcp              # mcp-builder
+pdf2image        # pdf (needs poppler-utils)
+pytesseract      # pdf OCR (needs tesseract-ocr)
+pypdf            # pdf
+pdfplumber       # pdf
+openpyxl         # xlsx
+lxml             # docx / pptx / xlsx
+defusedxml       # docx / pptx / xlsx
+Pillow           # pdf / pptx
+PyYAML           # skill-creator
+playwright==1.63.0   # webapp-testing (browser: use an existing Chromium; do not `playwright install` in the cloud image)
+markitdown[pptx]     # pptx (text extraction)
+# System packages (apt): qpdf tesseract-ocr graphviz poppler-utils libreoffice pandoc
+# Node (global): docx

@@ -14,6 +14,8 @@ Usage:
       -- python test.py
 """
 
+import os
+import signal
 import subprocess
 import socket
 import time
@@ -30,6 +32,17 @@ def is_server_ready(port, timeout=30):
         except (socket.error, ConnectionRefusedError):
             time.sleep(0.5)
     return False
+
+
+def _stop(process, sig):
+    """Signal the server's whole process group (POSIX) or fall back to the process."""
+    if hasattr(os, 'killpg') and sig is not None:
+        try:
+            os.killpg(os.getpgid(process.pid), sig)
+            return
+        except ProcessLookupError:
+            return
+    process.terminate() if sig is None or sig == getattr(signal, 'SIGTERM', None) else process.kill()
 
 
 def main():
@@ -70,7 +83,10 @@ def main():
                 server['cmd'],
                 shell=True,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                # New session => own process group, so cleanup can stop the
+                # whole tree (shell + server), not only the wrapping shell.
+                start_new_session=hasattr(os, 'killpg')
             )
             server_processes.append(process)
 
@@ -93,10 +109,10 @@ def main():
         print(f"\nStopping {len(server_processes)} server(s)...")
         for i, process in enumerate(server_processes):
             try:
-                process.terminate()
+                _stop(process, signal.SIGTERM if hasattr(signal, 'SIGTERM') else None)
                 process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                process.kill()
+                _stop(process, getattr(signal, 'SIGKILL', None))
                 process.wait()
             print(f"Server {i+1} stopped")
         print("All servers stopped")
